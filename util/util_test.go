@@ -2,6 +2,7 @@ package util
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"testing"
 )
@@ -9,6 +10,7 @@ import (
 func TestAuthenticate(t *testing.T) {
 
 	ctx := context.Background()
+	number := 3
 
 	app, err := FBnewApp(ctx, "../credentials/tracker-firebase-adminsdk.json")
 	if err != nil {
@@ -22,7 +24,7 @@ func TestAuthenticate(t *testing.T) {
 	_, err = client.Collection("test").Doc("FirebaseGo").Set(ctx, map[string]interface{}{
 		"application": "FirebaseGo",
 		"function":    "TestAuthenticate",
-		"timestamp":   1815,
+		"random":      number,
 	})
 
 	if err != nil {
@@ -30,5 +32,15 @@ func TestAuthenticate(t *testing.T) {
 	}
 
 	defer client.Close()
+
+	dsnap, err := client.Collection("test").Doc("FirebaseGo").Get(ctx)
+	if err != nil {
+		log.Fatalf("Failed to get record: %v", err)
+	}
+	m := dsnap.Data()
+	fmt.Printf("Document data: %v %v\n", m["random"].(int64), number)
+	if m["random"].(int64) != 3 {
+		t.Fatalf("Didn't return correct value\n")
+	}
 
 }
