@@ -1,46 +1,61 @@
 package util
 
 import (
-	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-
-	"golang.org/x/net/context"
-
+	"cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go"
+	"fmt"
+	"golang.org/x/net/context"
 	"google.golang.org/api/option"
+	"log"
+	"sync"
 )
 
-func CreateDir(dir string) error {
-	newpath := filepath.Join(".", dir)
-	err := os.MkdirAll(newpath, os.ModePerm)
-	return err
+// Firebase struct
+type FB struct {
+	sync.Mutex
+	Credentials string
+	App         *firebase.App
 }
 
-func RmDir(dir string) error {
-	path := filepath.Join(".", dir)
-	err := os.RemoveAll(path)
-	return err
+func (fb *FB) WriteMap(ctx context.Context, doc map[string]interface{}) {
+	fb.Lock()
+	defer fb.Unlock()
+	client, err := fb.App.Firestore(ctx)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	_, err = client.Collection("test").Doc("FirebaseGo").Set(ctx, doc)
+
+	if err != nil {
+		log.Fatalf("Failed adding record: %v", err)
+	}
+	defer client.Close()
+
 }
 
-func StatDir(dir string) (os.FileInfo, error) {
-	path := filepath.Join(".", dir)
-	return os.Stat(path)
+func (fb *FB) ReadMap(ctx context.Context, path string, doc string) (*firestore.DocumentSnapshot,
+	error) {
+	fb.Lock()
+	defer fb.Unlock()
+	client, err := fb.App.Firestore(ctx)
+	defer client.Close()
+
+	dsnap, err := client.Collection(path).Doc(doc).Get(ctx)
+	if err != nil {
+		return dsnap, err
+	}
+	return dsnap, err
 }
 
-func Write(file string, data []byte, perm os.FileMode) error {
-	err := ioutil.WriteFile(file, data, perm)
-
-	return err
-}
-
-func FBnewApp(ctx context.Context, pathToServiceAccount string) (*firebase.App, error) {
-
-	opt := option.WithCredentialsFile(pathToServiceAccount)
+func (fb *FB) CreateApp(ctx context.Context) (*firebase.App, error) {
+	fb.Lock()
+	defer fb.Unlock()
+	opt := option.WithCredentialsFile(fb.Credentials)
 	app, err := firebase.NewApp(ctx, nil, opt)
 	if err != nil {
 		return nil, fmt.Errorf("error initializing app: %v", err)
 	}
+	fb.App = app
 	return app, nil
 }
