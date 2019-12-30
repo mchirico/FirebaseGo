@@ -3,43 +3,31 @@ package util
 import (
 	"context"
 	"fmt"
-	"log"
 	"testing"
 )
 
-func TestAuthenticate(t *testing.T) {
+func TestReadWrite_Firebase(t *testing.T) {
+	credentials := "../credentials/tracker-firebase-adminsdk.json"
 
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // cancel when we are finished
+
 	number := 3
+	doc := make(map[string]interface{})
+	doc["application"] = "FirebaseGo"
+	doc["function"] = "TestAuthenticate"
+	doc["test"] = "This is example text..."
+	doc["random"] = number
 
-	app, err := FBnewApp(ctx, "../credentials/tracker-firebase-adminsdk.json")
-	if err != nil {
-		t.Fatalf("Can't access Service Account JSON")
-	}
-	client, err := app.Firestore(ctx)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	fb := &FB{Credentials: credentials}
+	fb.CreateApp(ctx)
+	fb.WriteMap(ctx, doc)
 
-	_, err = client.Collection("test").Doc("FirebaseGo").Set(ctx, map[string]interface{}{
-		"application": "FirebaseGo",
-		"function":    "TestAuthenticate",
-		"random":      number,
-	})
+	dsnap, _ := fb.ReadMap(ctx, "test", "FirebaseGo")
+	result := dsnap.Data()
 
-	if err != nil {
-		log.Fatalf("Failed adding record: %v", err)
-	}
-
-	defer client.Close()
-
-	dsnap, err := client.Collection("test").Doc("FirebaseGo").Get(ctx)
-	if err != nil {
-		log.Fatalf("Failed to get record: %v", err)
-	}
-	m := dsnap.Data()
-	fmt.Printf("Document data: %v %v\n", m["random"].(int64), number)
-	if m["random"].(int64) != 3 {
+	fmt.Printf("Document data: %v %v\n", result["random"].(int64), number)
+	if result["random"].(int64) != 3 {
 		t.Fatalf("Didn't return correct value\n")
 	}
 
