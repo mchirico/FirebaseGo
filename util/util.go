@@ -35,10 +35,10 @@ func Write(file string, data []byte, perm os.FileMode) error {
 	return err
 }
 
-func FBnewApp(pathToServiceAccount string) (*firebase.App, error) {
+func FBnewApp(ctx context.Context, pathToServiceAccount string) (*firebase.App, error) {
 
 	opt := option.WithCredentialsFile(pathToServiceAccount)
-	app, err := firebase.NewApp(context.Background(), nil, opt)
+	app, err := firebase.NewApp(ctx, nil, opt)
 	if err != nil {
 		return nil, fmt.Errorf("error initializing app: %v", err)
 	}
