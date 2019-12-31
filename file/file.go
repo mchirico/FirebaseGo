@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 )
 
+//
 func CreateDir(dir string) error {
 	newpath := filepath.Join(".", dir)
 	err := os.MkdirAll(newpath, os.ModePerm)
