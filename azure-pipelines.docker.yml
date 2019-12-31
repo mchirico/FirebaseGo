@@ -48,6 +48,7 @@ steps:
     go test -race -coverprofile=coverage.txt -covermode=atomic ./...
     if [[ -s coverage.txt ]]; then bash <(curl -s https://codecov.io/bash); fi
   env:
+    FIREBASE_BUCKET: $(FIREBASE_BUCKET)
     MONGO_DATABASE: $(MONGO_DATABASE)
     MONGO_CONNECTION_STRING: $(MONGO_CONNECTION_STRING)
     CODECOV_TOKEN: $(CODECOV_TOKEN)
