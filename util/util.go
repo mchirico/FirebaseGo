@@ -2,9 +2,11 @@ package util
 
 import (
 	"cloud.google.com/go/firestore"
+	"cloud.google.com/go/storage"
+	"context"
 	firebase "firebase.google.com/go"
 	"fmt"
-	"golang.org/x/net/context"
+	"github.com/mchirico/FirebaseGo/bucket"
 	"google.golang.org/api/option"
 	"log"
 	"sync"
@@ -13,8 +15,14 @@ import (
 // Firebase struct
 type FB struct {
 	sync.Mutex
-	Credentials string
-	App         *firebase.App
+	Credentials   string
+	App           *firebase.App
+	StorageBucket string
+
+	Bucket *bucket.Bucket
+	// Private
+	bucketHandle *storage.BucketHandle
+	err          error
 }
 
 func (fb *FB) WriteMap(ctx context.Context, doc map[string]interface{}) {
@@ -52,6 +60,9 @@ func (fb *FB) CreateApp(ctx context.Context) (*firebase.App, error) {
 	fb.Lock()
 	defer fb.Unlock()
 	opt := option.WithCredentialsFile(fb.Credentials)
+	storageClient, err := storage.NewClient(ctx, opt)
+	fb.Bucket = bucket.FBInitBucket(storageClient, fb.StorageBucket)
+
 	app, err := firebase.NewApp(ctx, nil, opt)
 	if err != nil {
 		return nil, fmt.Errorf("error initializing app: %v", err)
