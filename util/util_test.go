@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 	"github.com/mchirico/FirebaseGo/file"
+	"os"
 	"testing"
 )
 
 func TestReadWrite_Firebase(t *testing.T) {
 	credentials := "../credentials/tracker-firebase-adminsdk.json"
-	StorageBucket := "tracker-184b3.appspot.com"
+	StorageBucket := os.Getenv("FIREBASE_BUCKET")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // cancel when we are finished

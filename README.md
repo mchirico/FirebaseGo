@@ -8,13 +8,9 @@
 
 ### Checklist:
 
-1. dockerPassword
-2. [CodeCov Token](https://codecov.io/gh/mchirico)
-3. No Caps in project
-4. MONGO_CONNECTION_STRING
-5. MONGO_DATABASE 
-6. Make Azure Boards Public
-7. More Cobra commands? (cobra add say)
+Set the FIREBASE_BUCKET environment variable to the Google Storage Bucket.
+Remove "gs://" 
+
 
 
 
