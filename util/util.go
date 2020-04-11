@@ -42,6 +42,23 @@ func (fb *FB) WriteMap(ctx context.Context, doc map[string]interface{}) {
 
 }
 
+func (fb *FB) WriteMap2(ctx context.Context, doc map[string]interface{}) {
+	fb.Lock()
+	defer fb.Unlock()
+	client, err := fb.App.Firestore(ctx)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	_, err = client.Collection("test").Doc("FirebaseGo").Collection("2").Doc("doc").Set(ctx, doc)
+
+	if err != nil {
+		log.Fatalf("Failed adding record: %v", err)
+	}
+	defer client.Close()
+
+}
+
 func (fb *FB) ReadMap(ctx context.Context, path string, doc string) (*firestore.DocumentSnapshot,
 	error) {
 	fb.Lock()
@@ -50,6 +67,20 @@ func (fb *FB) ReadMap(ctx context.Context, path string, doc string) (*firestore.
 	defer client.Close()
 
 	dsnap, err := client.Collection(path).Doc(doc).Get(ctx)
+	if err != nil {
+		return dsnap, err
+	}
+	return dsnap, err
+}
+
+func (fb *FB) ReadMap2(ctx context.Context, path string, doc string, path2 string, doc2 string) (*firestore.DocumentSnapshot,
+	error) {
+	fb.Lock()
+	defer fb.Unlock()
+	client, err := fb.App.Firestore(ctx)
+	defer client.Close()
+
+	dsnap, err := client.Collection(path).Doc(doc).Collection(path2).Doc(doc2).Get(ctx)
 	if err != nil {
 		return dsnap, err
 	}
